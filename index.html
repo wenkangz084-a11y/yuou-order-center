@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>我的订单 - YUOU母婴商城</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{font-size:14px;-webkit-text-size-adjust:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',Arial,sans-serif;background:#f5f5f5;color:#222;line-height:1.5;max-width:480px;margin:0 auto;min-height:100vh;-webkit-font-smoothing:antialiased}
+  img{display:block;max-width:100%}
+  a{text-decoration:none;color:inherit}
+  button{border:none;background:none;cursor:pointer;font:inherit}
+  .page{display:none;width:100%;min-height:100vh;padding-bottom:20px}
+  .page.active{display:block}
+  .page-header{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#E8566A,#F0788A);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px}
+  .page-header .back-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0}
+  .page-header h1{font-size:17px;font-weight:600;flex:1;text-align:center}
+  .page-header .placeholder{width:28px;flex-shrink:0}
+  .order-tabs{display:flex;background:#fff;position:sticky;top:48px;z-index:99;border-bottom:1px solid #eee;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .order-tabs::-webkit-scrollbar{display:none}
+  .order-tab{flex:0 0 auto;padding:12px 14px;font-size:13px;color:#666;white-space:nowrap;position:relative;transition:color 0.2s}
+  .order-tab.active{color:#E8566A;font-weight:600}
+  .order-tab.active::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:20px;height:3px;background:#E8566A;border-radius:2px}
+  .order-list{padding:12px;display:flex;flex-direction:column;gap:12px}
+  .order-empty{text-align:center;padding:80px 20px;color:#999;font-size:14px}
+  .order-empty .empty-icon{font-size:48px;margin-bottom:12px;opacity:0.5}
+  .order-card{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06);animation:fadeIn 0.3s ease}
+  .order-card-header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px 0;font-size:12px;color:#999}
+  .order-card-header .order-status{color:#E8566A;font-weight:600;font-size:13px}
+  .order-card-header .order-status.done{color:#999}
+  .order-card-store{display:flex;align-items:center;gap:4px;padding:8px 14px 0;font-size:12px;color:#666}
+  .order-card-store .store-icon{color:#E8566A;font-size:14px}
+  .order-card-product{display:flex;gap:12px;padding:10px 14px;cursor:pointer;border-bottom:1px solid #f5f5f5;transition:background 0.15s}
+  .order-card-product:active{background:#fafafa}
+  .order-card-product:last-child{border-bottom:none}
+  .prod-img{width:80px;height:80px;border-radius:6px;flex-shrink:0;background:#f0f0f0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .prod-img img{width:100%;height:100%;object-fit:cover}
+  .prod-info{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+  .prod-name{font-size:13px;font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-all}
+  .prod-specs{font-size:12px;color:#999;margin-top:2px}
+  .prod-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+  .prod-price{font-size:14px;font-weight:600;color:#E8566A}
+  .prod-price .unit{font-size:11px;font-weight:400;color:#999}
+  .prod-qty{font-size:12px;color:#999}
+  .order-card-footer{display:flex;flex-direction:column;gap:8px;padding:10px 14px;background:#fafafa}
+  .order-total{text-align:right;font-size:13px;color:#333}
+  .order-total .total-amount{font-size:16px;font-weight:600;color:#E8566A}
+  .order-total .shipping-label{font-size:11px;color:#999;font-weight:400}
+  .order-actions{display:flex;justify-content:flex-end;gap:8px}
+  .order-actions .btn{padding:6px 14px;border-radius:16px;font-size:12px;border:1px solid #ddd;color:#666;transition:all 0.2s}
+  .order-actions .btn:active{opacity:0.7}
+  .order-actions .btn-primary{background:#E8566A;color:#fff;border-color:#E8566A}
+  .order-actions .btn-outline-primary{border-color:#E8566A;color:#E8566A}
+  .detail-sections{padding:12px;display:flex;flex-direction:column;gap:10px}
+  .detail-card{background:#fff;border-radius:10px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.06);animation:fadeIn 0.3s ease}
+  .detail-card-title{font-size:14px;font-weight:600;color:#222;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  .status-section{background:linear-gradient(135deg,#E8566A,#F0788A);color:#fff;border-radius:10px;padding:20px 16px;text-align:center}
+  .status-section .big-status{font-size:18px;font-weight:700;margin-bottom:4px}
+  .status-section .status-hint{font-size:12px;opacity:0.85}
+  .address-row{display:flex;gap:10px;align-items:flex-start}
+  .address-row .addr-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+  .address-row .addr-info{flex:1}
+  .address-row .addr-user{font-size:15px;font-weight:600;color:#222;margin-bottom:2px}
+  .address-row .addr-detail{font-size:13px;color:#666;line-height:1.6}
+  .logistics-row{display:flex;gap:10px;padding:6px 0;align-items:flex-start}
+  .logistics-row:first-child{padding-top:0}
+  .logistics-row .logi-icon{font-size:18px;flex-shrink:0;width:24px;text-align:center}
+  .logistics-row .logi-info{flex:1}
+  .logistics-row .logi-label{font-size:12px;color:#999}
+  .logistics-row .logi-value{font-size:13px;color:#333}
+  .price-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;color:#666}
+  .price-row.total{border-top:1px solid #eee;margin-top:4px;padding-top:10px;font-weight:600;color:#222;font-size:14px}
+  .price-row.total .price-val{color:#E8566A;font-size:17px;font-weight:700}
+  .order-info-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;color:#666}
+  .order-info-row:first-child{padding-top:0}
+  .order-info-row .info-val{display:flex;align-items:center;gap:6px}
+  .copy-btn{font-size:11px;color:#E8566A;border:1px solid #E8566A;padding:2px 8px;border-radius:10px;transition:all 0.2s}
+  .copy-btn:active{background:#E8566A;color:#fff}
+  .cashback-row{display:flex;gap:12px;align-items:center;padding:6px 0}
+  .cashback-row .cb-amount{font-size:20px;font-weight:700;color:#E8566A}
+  .cashback-row .cb-label{font-size:13px;color:#666;flex:1}
+  .cashback-row .cb-status{font-size:12px;color:#999}
+  .toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.75);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:999;opacity:0;pointer-events:none;transition:opacity 0.3s}
+  .toast.show{opacity:1}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  @media(min-width:481px){body{border-left:1px solid #eee;border-right:1px solid #eee;box-shadow:0 0 20px rgba(0,0,0,0.04)}}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<!-- LIST PAGE -->
+<div class="page active" id="page-list">
+  <div class="page-header"><span class="placeholder"></span><h1>我的订单</h1><span class="placeholder"></span></div>
+  <div class="order-tabs" id="orderTabs">
+    <div class="order-tab active" data-status="all">全部</div>
+    <div class="order-tab" data-status="pending_payment">待付款</div>
+    <div class="order-tab" data-status="pending_ship">待发货</div>
+    <div class="order-tab" data-status="shipping">配送中</div>
+    <div class="order-tab" data-status="pending_review">待评价</div>
+    <div class="order-tab" data-status="done">已完成</div>
+  </div>
+  <div class="order-list" id="orderList"></div>
+</div>
+<!-- DETAIL PAGE -->
+<div class="page" id="page-detail">
+  <div class="page-header"><button class="back-btn" onclick="goBackToList()">&#x2039;</button><h1>订单详情</h1><span class="placeholder"></span></div>
+  <div class="detail-sections" id="detailContent"></div>
+</div>
+<script>
+var ORDERS = [
+  {
+    id:'YUOU20260703001',
+    status:'shipping',
+    statusLabel:'\u914D\u9001\u4E2D',
+    store:'YUOU\u5B98\u65B9\u65D7\u8230\u5E97',
+    createTime:'2026-07-01 14:30:25',
+    address:{user:'\u5F20\u5973\u58EB',phone:'138****5678',detail:'\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02\u5929\u6CB3\u533A\u73E0\u6C5F\u65B0\u57CE\u534E\u590F\u8DEF28\u53F7\u5BCC\u529B\u4E2D\u5FC3A\u5EA71206\u5BA4'},
+    products:[
+      {img:'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22%3E%3Crect width=%22160%22 height=%22160%22 fill=%22%23fce4ec%22/%3E%3Ctext x=%2280%22 y=%2280%22 text-anchor=%22middle%22 dominant-baseline=%22central%22 font-size=%2236%22%3E%F0%9F%8D%BC%3C/text%3E%3C/svg%3E',name:'\u7F8E\u8D5E\u81E3 \u84DD\u81FB\u5A74\u5E7C\u513F\u914D\u65B9\u5976\u7C89 3\u6BB5',specs:'800g/\u7F50',price:368,qty:2},
+      {img:'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22%3E%3Crect width=%22160%22 height=%22160%22 fill=%22%23e3f2fd%22/%3E%3Ctext x=%2280%22 y=%2280%22 text-anchor=%22middle%22 dominant-baseline=%22central%22 font-size=%2236%22%3E%F0%9F%8D%BC%3C/text%3E%3C/svg%3E',name:'\u98DE\u9E64 \u661F\u98DE\u5E06\u5E7C\u513F\u914D\u65B9\u5976\u7C89 3\u6BB5',specs:'700g/\u7F50',price:268,qty:1}
+    ],
+    shipping:{company:'\u987A\u4E30\u901F\u8FD0',trackingNo:'SF1234567890123',status:'\u5DF2\u5230\u8FBE\u5E7F\u5DDE\u5206\u62E8\u4E2D\u5FC3',progress:'\u8FD0\u8F93\u4E2D'},
+    cashback:{amount:38.5,status:'\u8FD4\u73B0\u4E2D'},
+    totalAmount:1004,
+    shippingFee:0
+  },
+  {
+    id:'YUOU20260628002',
+    status:'done',
+    statusLabel:'\u5DF2\u5B8C\u6210',
+    store:'YUOU\u5B98\u65B9\u65D7\u8230\u5E97',
+    createTime:'2026-06-28 09:15:42',
+    address:{user:'\u5F20\u5973\u58EB',phone:'138****5678',detail:'\u5E7F\u4E1C\u7701\u5E7F\u5DDE\u5E02\u5929\u6CB3\u533A\u73E0\u6C5F\u65B0\u57CE\u534E\u590F\u8DEF28\u53F7\u5BCC\u529B\u4E2D\u5FC3A\u5EA71206\u5BA4'},
+    products:[
+      {img:'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22%3E%3Crect width=%22160%22 height=%22160%22 fill=%22%23fff3e0%22/%3E%3Ctext x=%2280%22 y=%2280%22 text-anchor=%22middle%22 dominant-baseline=%22central%22 font-size=%2236%22%3E%F0%9F%8D%BC%3C/text%3E%3C/svg%3E',name:'\u7231\u4ED6\u7F8E \u5353\u8403\u5E7C\u513F\u914D\u65B9\u5976\u7C89 3\u6BB5',specs:'900g/\u7F50',price:428,qty:3}
+    ],
+    shipping:{company:'\u4EAC\u4E1C\u5FEB\u9012',trackingNo:'JD9876543210987',status:'\u5DF2\u7B7E\u6536',progress:'\u5DF2\u7B7E\u6536'},
+    cashback:{amount:64.2,status:'\u5DF2\u5230\u8D26'},
+    totalAmount:1284,
+    shippingFee:0
+  }
+];
+var currentFilter='all';
+function showToast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(el._timer);el._timer=setTimeout(function(){el.classList.remove('show')},1500)}
+function showPage(id){var ps=document.querySelectorAll('.page');for(var i=0;i<ps.length;i++)ps[i].classList.remove('active');document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
+function goBackToList(){renderOrders();showPage('page-list')}
+function renderOrders(){
+  var c=document.getElementById('orderList');
+  var f=currentFilter==='all'?ORDERS.slice():[];
+  if(currentFilter!=='all'){for(var i=0;i<ORDERS.length;i++){if(ORDERS[i].status===currentFilter)f.push(ORDERS[i])}}
+  if(f.length===0){c.innerHTML='<div class="order-empty"><div class="empty-icon">\uD83D\uDCE6</div>\u6682\u65E0\u76F8\u5173\u8BA2\u5355</div>';return}
+  var h='';
+  for(var i=0;i<f.length;i++){
+    var o=f[i];var sc=o.status==='done'?' done':'';
+    var ph='';
+    for(var j=0;j<o.products.length;j++){var p=o.products[j];ph+='<div class="order-card-product" onclick="openDetail(\''+o.id+'\')"><div class="prod-img"><img src="'+p.img+'" alt="'+p.name+'" loading="lazy"></div><div class="prod-info"><div><div class="prod-name">'+p.name+'</div><div class="prod-specs">'+p.specs+'</div></div><div class="prod-bottom"><div class="prod-price"><span class="unit">\u00A5</span>'+p.price.toFixed(2)+'</div><div class="prod-qty">\u00D7'+p.qty+'</div></div></div></div>'}
+    var tq=0;for(var j=0;j<o.products.length;j++)tq+=o.products[j].qty;
+    h+='<div class="order-card"><div class="order-card-header"><span>\u8BA2\u5355\u53F7\uFF1A'+o.id+'</span><span class="order-status'+sc+'">'+o.statusLabel+'</span></div><div class="order-card-store"><span class="store-icon">\uD83C\uDFEA</span> '+o.store+'</div>'+ph+'<div class="order-card-footer"><div class="order-total">\u5171'+tq+'\u4EF6\u5546\u54C1&nbsp;&nbsp;\u5B9E\u4ED8\uFF1A<span class="total-amount">\u00A5'+o.totalAmount.toFixed(2)+'</span>'+(o.shippingFee===0?'<span class="shipping-label">\uFF08\u514D\u8FD0\u8D39\uFF09</span>':'')+'</div><div class="order-actions"><button class="btn" onclick="event.stopPropagation();showToast(\'\uD83C\uDF81 \u8FD4\u73B0\u91D1 \u00A5'+o.cashback.amount.toFixed(2)+'\uFF0C'+o.cashback.status+'\')">\u67E5\u770B\u8FD4\u73B0\u91D1</button><button class="btn btn-outline-primary" onclick="event.stopPropagation();openDetail(\''+o.id+'\')">\u67E5\u770B\u7269\u6D41</button></div></div></div>'}
+  c.innerHTML=h
+}
+function openDetail(id){
+  var o=null;for(var i=0;i<ORDERS.length;i++){if(ORDERS[i].id===id){o=ORDERS[i];break}}
+  if(!o)return;var c=document.getElementById('detailContent');var st=0;for(var i=0;i<o.products.length;i++)st+=o.products[i].price*o.products[i].qty;
+  var hf=o.shippingFee>0;
+  var h='<div class="status-section"><div class="big-status">'+o.statusLabel+'</div>'+(o.status==='shipping'?'<div class="status-hint">\u8BA2\u5355\u5DF2\u53D1\u8D27\uFF0C\u6B63\u5FEB\u9A6C\u52A0\u97AD\u4E3A\u60A8\u914D\u9001\u4E2D</div>':'')+(o.status==='done'?'<div class="status-hint">\u611F\u8C22\u60A8\u7684\u8D2D\u4E70\uFF0C\u6B22\u8FCE\u518D\u6B21\u5149\u4E34</div>':'')+'</div>';
+  h+='<div class="detail-card"><div class="address-row"><div class="addr-icon">\uD83D\uDCCD</div><div class="addr-info"><div class="addr-user">'+o.address.user+'\u3000'+o.address.phone+'</div><div class="addr-detail">'+o.address.detail+'</div></div></div></div>';
+  h+='<div class="detail-card"><div class="detail-card-title">\uD83C\uDFEA '+o.store+'</div>';
+  for(var i=0;i<o.products.length;i++){var p=o.products[i];h+='<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f5f5f5"><div class="prod-img"><img src="'+p.img+'" alt="'+p.name+'" loading="lazy"></div><div class="prod-info"><div class="prod-name">'+p.name+'</div><div class="prod-specs">'+p.specs+'</div><div class="prod-bottom"><div class="prod-price"><span class="unit">\u00A5</span>'+p.price.toFixed(2)+'</div><div class="prod-qty">\u00D7'+p.qty+'</div></div></div></div>'}
+  h+='</div><div class="detail-card"><div class="price-row"><span>\u5546\u54C1\u603B\u4EF7</span><span>\u00A5'+st.toFixed(2)+'</span></div><div class="price-row"><span>\u8FD0\u8D39</span><span>'+(hf?'\u00A5'+o.shippingFee.toFixed(2):'\u514D\u8FD0\u8D39')+'</span></div><div class="price-row total"><span>\u5B9E\u4ED8\u91D1\u989D</span><span class="price-val">\u00A5'+o.totalAmount.toFixed(2)+'</span></div></div>';
+  if(o.shipping){var s=o.shipping;h+='<div class="detail-card"><div class="detail-card-title">\uD83D\uDE9A \u7269\u6D41\u4FE1\u606F</div><div class="logistics-row"><div class="logi-icon">\uD83D\uDCEB</div><div class="logi-info"><div class="logi-label">\u7269\u6D41\u516C\u53F8</div><div class="logi-value">'+s.company+'</div></div></div><div class="logistics-row"><div class="logi-icon">\uD83D\uDD22</div><div class="logi-info"><div class="logi-label">\u8FD0\u5355\u7F16\u53F7</div><div class="logi-value">'+s.trackingNo+'</div></div></div><div class="logistics-row"><div class="logi-icon">\uD83D\uDCCC</div><div class="logi-info"><div class="logi-label">\u7269\u6D41\u72B6\u6001</div><div class="logi-value">'+s.progress+'</div></div></div><div class="logistics-row" style="padding-bottom:0"><div class="logi-icon">\uD83D\uDCCD</div><div class="logi-info"><div class="logi-label">\u6700\u65B0\u52A8\u6001</div><div class="logi-value">'+s.status+'</div></div></div></div>'}
+  if(o.cashback){var cb=o.cashback;h+='<div class="detail-card"><div class="detail-card-title">\uD83C\uDF81 \u8FD4\u73B0\u4FE1\u606F</div><div class="cashback-row"><div class="cb-amount">\u00A5'+cb.amount.toFixed(2)+'</div><div class="cb-label">\u8FD4\u73B0\u91D1\u989D</div><div class="cb-status">'+(cb.status==='\u5DF2\u5230\u8D26'?'\u2705':'\u23F3')+' '+cb.status+'</div></div></div>'}
+  h+='<div class="detail-card"><div class="detail-card-title">\uD83D\uDCCB \u8BA2\u5355\u4FE1\u606F</div><div class="order-info-row"><span>\u8BA2\u5355\u7F16\u53F7</span><span class="info-val">'+o.id+'<button class="copy-btn" onclick="copyOrderNumber(\''+o.id+'\')">\u590D\u5236</button></span></div><div class="order-info-row" style="padding-bottom:0"><span>\u4E0B\u5355\u65F6\u95F4</span><span>'+o.createTime+'</span></div></div>';
+  c.innerHTML=h;showPage('page-detail')
+}
+function copyOrderNumber(t){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){showToast('\u2705 \u8BA2\u5355\u53F7\u5DF2\u590D\u5236')}).catch(function(){fallbackCopy(t)})}else{fallbackCopy(t)}}
+function fallbackCopy(t){var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('\u2705 \u8BA2\u5355\u53F7\u5DF2\u590D\u5236')}
+document.getElementById('orderTabs').addEventListener('click',function(e){var tab=e.target.closest('.order-tab');if(!tab)return;var tabs=document.querySelectorAll('.order-tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');tab.classList.add('active');currentFilter=tab.dataset.status;renderOrders()});
+renderOrders();
+</script>
+</body>
+</html>
