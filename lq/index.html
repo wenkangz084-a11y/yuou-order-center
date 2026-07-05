@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+    <title>个人订单中心</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+      <header class="topbar">
+        <div class="brand-block">
+          <div class="brand-mark">YUOU</div>
+          <div>
+            <p class="topbar__eyebrow">YUOU商城</p>
+            <h1>这是一个母婴商店</h1>
+            <p class="topbar__subtext">个人订单中心</p>
+          </div>
+        </div>
+        <button class="topbar__icon" aria-label="更多">⋯</button>
+      </header>
+
+      <main class="page">
+        <section id="listView" class="view view--active">
+          <div class="summary-card">
+            <div>
+              <p class="summary-card__label">本月订单</p>
+              <h2>8 笔</h2>
+            </div>
+            <div class="summary-card__stats">
+              <span>待收货 2</span>
+              <span>已完成 6</span>
+            </div>
+          </div>
+
+          <div class="filter-bar" id="filterBar"></div>
+
+          <div class="section-title">
+            <span>订单列表</span>
+            <a href="#">查看全部</a>
+          </div>
+
+          <div id="orderList" class="order-list"></div>
+        </section>
+
+        <section id="detailView" class="view">
+          <div class="detail-header">
+            <button id="backBtn" class="back-btn" type="button">← 返回</button>
+            <span>订单详情</span>
+          </div>
+
+          <div id="detailContent" class="detail-content"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
