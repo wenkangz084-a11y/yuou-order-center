@@ -279,13 +279,21 @@ function normalizeOrder(raw) {
       ? "badge--warning"
       : "badge--danger";
 
+  const quantity = Number(raw.quantity || raw.购买数量 || 1);
+  const totalPrice = parseMoney(raw.totalPrice || raw.商品总价 || 0);
+  const unitPrice = parseMoney(
+    raw.unitPrice || raw.singlePrice || raw.pricePerUnit || raw.pricePerCan ||
+    (totalPrice && quantity ? totalPrice / quantity : 0)
+  );
+
   return {
     id: raw.id || raw.订单ID || raw.orderNo || "",
     orderNo: raw.orderNo || raw.订单号 || raw.订单ID || "",
     title: raw.productName || raw.商品名称 || "商品",
     time: raw.orderTime || raw.下单时间 || "",
     price: parseMoney(raw.paid || raw.实付金额 || raw.price || 0),
-    totalPrice: parseMoney(raw.totalPrice || raw.商品总价 || 0),
+    totalPrice,
+    unitPrice,
     discount: parseMoney(raw.discount || raw.优惠金额 || 0),
     freight: parseMoney(raw.freight || raw.运费 || 0),
     tax: parseMoney(raw.tax || raw.税费 || 0),
@@ -415,23 +423,32 @@ function renderOrders() {
             <div class="order-card__product-info">
               <div class="order-card__product-name">${order.productName}</div>
               <p class="order-card__spec">${order.spec}</p>
-              <div class="order-card__quantity">x${order.quantity}</div>
+              <div class="order-card__price-single">￥${order.unitPrice.toFixed(2)}</div>
             </div>
+            <div class="order-card__quantity">×${order.quantity}</div>
           </div>
 
           <div class="order-card__footer">
-            <span class="order-card__coupon">${order.coupon ? `券 ${order.coupon}` : "无优惠券"}</span>
-            <div class="order-card__price-block">
-              <div class="order-card__price-row order-card__price-row--total"><span>总价</span><strong>¥${order.totalPrice.toFixed(2)}</strong></div>
-              <div class="order-card__price-row"><span>优惠</span><strong>-¥${order.discount.toFixed(2)}</strong></div>
-              <div class="order-card__price-row order-card__price-row--pay"><span>实付</span><strong>¥${order.price.toFixed(2)}</strong></div>
-              <div class="order-card__price-row"><span>运费</span><strong>¥${order.freight.toFixed(2)}</strong></div>
-              <div class="order-card__price-row"><span>税费</span><strong>¥${order.tax.toFixed(2)}</strong></div>
+            <div class="price-summary">
+              <div class="price-summary__coupon-row">
+                <span class="price-summary__coupon">${order.coupon ? `专属券 ${order.coupon}` : "无优惠券"}</span>
+                <button class="price-summary__claim" type="button">领取优惠券</button>
+              </div>
+              <div class="price-summary__row price-summary__row--top">
+                <span><em>总价：</em><strong>¥${order.totalPrice.toFixed(2)}</strong></span>
+                <span><em>优惠：</em><strong>¥${order.discount.toFixed(2)}</strong></span>
+              </div>
+              <div class="price-summary__row price-summary__row--paid">
+                <em>实付：</em>
+                <strong>¥${order.price.toFixed(2)}</strong>
+              </div>
+              <div class="price-summary__row price-summary__row--extra">
+                (含运费 ¥${order.freight.toFixed(2)}，税费 ¥${order.tax.toFixed(2)})
+              </div>
             </div>
           </div>
 
           <div class="order-card__actions">
-            <button class="order-card__action" type="button" data-action="logistics">查看物流</button>
             <button class="order-card__action" type="button" data-action="refund">查看返现金</button>
           </div>
         </article>
@@ -451,6 +468,11 @@ function renderOrders() {
       });
     });
 
+    card.querySelector(".price-summary__claim")?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      showToast("领取优惠券成功");
+    });
+
     card.querySelector(".order-card__product").addEventListener("click", (event) => {
       event.stopPropagation();
       openDetail(card.dataset.id);
@@ -465,64 +487,99 @@ function openDetail(orderId) {
   lastListScrollTop = page.scrollTop;
 
   detailContent.innerHTML = `
-    <section class="detail-panel">
-      <div class="detail-panel__title">订单概览</div>
-      <div class="detail-row"><span>状态</span><strong class="detail-panel__status--inline">${order.status}</strong></div>
-      <div class="detail-row"><span>店铺</span><strong>${order.shop}</strong></div>
-      <div class="detail-row"><span>下单时间</span><strong>${order.time}</strong></div>
-      <div class="detail-row">
-        <span>订单号</span>
-        <div class="detail-row__value">
-          <strong>${order.id}</strong>
-          <button class="copy-btn" type="button" data-copy="${order.id}">复制</button>
+    <div class="detail-page">
+      <section class="detail-status">
+        <div class="detail-status__text">
+          <div class="detail-status__title">已完成</div>
+          <div class="detail-status__sub">欢迎再次光临购买</div>
         </div>
-      </div>
-    </section>
+        <div class="detail-status__icon">✓</div>
+      </section>
 
-    <section class="detail-panel">
-      <div class="detail-panel__title">收货信息</div>
-      <div class="detail-row"><span>收件人</span><strong>${order.contact}</strong></div>
-      <div class="detail-row"><span>电话</span><strong>${order.phone || "无"}</strong></div>
-      <div class="detail-row"><span>地址</span><strong>${order.address}</strong></div>
-      <div class="detail-row"><span>快递</span><strong>${order.expressCompany || "无"}</strong></div>
-      <div class="detail-row"><span>单号</span><strong>${order.expressNo || "无"}</strong></div>
-    </section>
+      <section class="detail-card detail-card--logistics">
+        <div class="detail-logistics__row">
+          <div class="detail-logistics__company">${order.expressCompany || "顺丰速运"}</div>
+          <div class="detail-logistics__arrow">›</div>
+        </div>
+        <div class="detail-logistics__no">${order.expressNo || "SF318598000****"}</div>
+        <div class="detail-divider"></div>
+        <div class="detail-recipient">
+          <div class="detail-recipient__name">${order.contact} ${order.phone || "136****1217"}</div>
+          <div class="detail-recipient__address">${order.address}</div>
+        </div>
+        <div class="detail-divider"></div>
+        <div class="detail-orderer">
+          <div class="detail-orderer__title">订购人信息</div>
+          <div class="detail-orderer__row"><span>订购人姓名</span><strong>${order.contact}</strong></div>
+          <div class="detail-orderer__row"><span>身份证号</span><strong>500***********052</strong></div>
+        </div>
+      </section>
 
-    <section class="detail-panel">
-      <div class="detail-panel__title">商品信息</div>
-      <div class="detail-product">
-        <img class="detail-product__image" src="${order.image}" alt="${order.productName}" />
-        <div class="detail-product__info">
-          <div class="detail-product__name">${order.productName}</div>
-          <p class="detail-product__spec">${order.spec}</p>
-          <div class="detail-product__meta">
-            <span>单价</span>
-            <strong>¥${order.price.toFixed(2)}</strong>
-          </div>
-          <div class="detail-product__meta">
-            <span>数量</span>
-            <strong>x${order.quantity}</strong>
+      <section class="detail-card detail-card--product">
+        <div class="detail-shop">
+          <div class="detail-shop__icon">🏪</div>
+          <div class="detail-shop__name">${order.shop}</div>
+        </div>
+        <div class="detail-divider"></div>
+        <div class="detail-product-row">
+          <img class="detail-product__image" src="${order.image}" alt="${order.productName}" />
+          <div class="detail-product__info">
+            <div class="detail-product__name">${order.productName}</div>
+            <div class="detail-product__spec">规格：${order.spec}</div>
+            <div class="detail-product__meta">
+              <div class="detail-product__price">￥${order.unitPrice.toFixed(2)}</div>
+              <div class="detail-product__quantity">×${order.quantity}</div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="detail-quick-actions">
-        <button type="button">售后</button>
-        <button type="button">优惠券</button>
-      </div>
-    </section>
+        <div class="detail-product__actions">
+          <button type="button" class="detail-pill">售后</button>
+        </div>
+      </section>
 
-    <section class="detail-panel">
-      <div class="detail-panel__title">金额与服务</div>
-      <div class="detail-row"><span>总价</span><strong>¥${order.totalPrice.toFixed(2)}</strong></div>
-      <div class="detail-row"><span>优惠</span><strong>-¥${order.discount.toFixed(2)}</strong></div>
-      <div class="detail-row"><span>实付</span><strong>¥${order.price.toFixed(2)}</strong></div>
-      <div class="detail-row"><span>运费</span><strong>¥${order.freight.toFixed(2)}</strong></div>
-      <div class="detail-row"><span>税费</span><strong>¥${order.tax.toFixed(2)}</strong></div>
-      <div class="detail-actions">
-        <button class="ghost" type="button">申请开票</button>
-        <button class="ghost" type="button">联系客服</button>
-      </div>
-    </section>
+      <section class="detail-coupon">
+        <div class="detail-coupon__amount">￥30</div>
+        <div class="detail-coupon__text">
+          <div>您有30元现金待领取</div>
+          <div>提现成功</div>
+        </div>
+        <button type="button" class="detail-coupon__btn">查看</button>
+      </section>
+
+      <section class="detail-card detail-card--amount">
+        <div class="detail-amount__row"><span>商品总价</span><strong>￥${order.totalPrice.toFixed(2)}</strong></div>
+        <div class="detail-amount__row"><span>税费</span><strong>￥${order.tax.toFixed(2)}</strong></div>
+        <div class="detail-amount__row"><span>运费</span><strong>￥${order.freight.toFixed(2)}</strong></div>
+        <div class="detail-amount__row"><span>优惠券</span><strong>-￥${order.discount.toFixed(2)}</strong></div>
+        <div class="detail-divider"></div>
+        <div class="detail-amount__row detail-amount__row--total"><span>实付金额</span><strong>￥${order.price.toFixed(2)}</strong></div>
+      </section>
+
+      <section class="detail-card detail-card--info">
+        <div class="detail-info__row">
+          <span>订单号</span>
+          <div class="detail-info__value">
+            <strong>${order.id}</strong>
+            <button class="copy-btn" type="button" data-copy="${order.id}">📋</button>
+          </div>
+        </div>
+        <div class="detail-info__row"><span>创建时间</span><strong>${order.time}</strong></div>
+        <div class="detail-info__row"><span>支付时间</span><strong>${order.time}</strong></div>
+        <div class="detail-info__row"><span>支付方式</span><strong>${order.payMethod || "微信支付"}</strong></div>
+      </section>
+
+      <section class="detail-card detail-card--invoice">
+        <div class="detail-invoice">申请开票</div>
+      </section>
+    </div>
+
+    <div class="detail-footer">
+      <button type="button" class="detail-footer__btn detail-footer__btn--service">
+        <span>💬</span>
+        <span>联系客服</span>
+      </button>
+      <button type="button" class="detail-footer__btn detail-footer__btn--ghost">查看物流</button>
+    </div>
   `;
 
   detailContent.querySelectorAll("[data-copy]").forEach((button) => {
@@ -534,12 +591,14 @@ function openDetail(orderId) {
 
   listView.classList.remove("view--active");
   detailView.classList.add("view--active");
+  document.body.classList.add("detail-active");
   page.scrollTop = 0;
 }
 
 backBtn.addEventListener("click", () => {
   detailView.classList.remove("view--active");
   listView.classList.add("view--active");
+  document.body.classList.remove("detail-active");
   page.scrollTop = lastListScrollTop;
 });
 
